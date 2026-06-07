@@ -69,6 +69,8 @@ class DelonghiNEC : public climate_ir::ClimateIR {
   void set_sync_temperature(float temperature);
   void set_sync_mode(const std::string &mode);
   void set_sync_fan(const std::string &fan);
+  void set_sync_swing(bool swing);
+  void set_sync_comfort(bool comfort);
 
  protected:
   // Diff the requested Home Assistant state against the tracked state and queue

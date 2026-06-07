@@ -338,10 +338,26 @@ void DelonghiNEC::set_sync_fan(const std::string &fan) {
     ESP_LOGW(TAG, "manual resync: unknown fan '%s'", fan.c_str());
     return;
   }
-  this->fan_main_ = speed;
-  // fan_only has no auto step; clamp it to high.
-  this->fan_fan_only_ = (speed == SPEED_AUTO) ? SPEED_HIGH : speed;
+  // Set the appropriate fan depending on current mode.
+  if (!this->auto_on_ && this->base_mode_ == BASE_FAN_ONLY) {
+    // In fan_only mode, set fan_fan_only_ (no auto step).
+    this->fan_fan_only_ = (speed == SPEED_AUTO) ? SPEED_HIGH : speed;
+  } else {
+    this->fan_main_ = speed;
+  }
   ESP_LOGI(TAG, "manual resync: fan = %s", fan.c_str());
+  this->publish_tracked_state_();
+}
+
+void DelonghiNEC::set_sync_swing(bool swing) {
+  this->swing_ = swing;
+  ESP_LOGI(TAG, "manual resync: swing = %s", swing ? "on" : "off");
+  this->publish_tracked_state_();
+}
+
+void DelonghiNEC::set_sync_comfort(bool comfort) {
+  this->comfort_ = comfort;
+  ESP_LOGI(TAG, "manual resync: comfort = %s", comfort ? "on" : "off");
   this->publish_tracked_state_();
 }
 

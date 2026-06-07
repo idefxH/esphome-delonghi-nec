@@ -55,7 +55,7 @@ number:
   - platform: template
     name: "Clim resync temperature"
     id: sync_temperature
-    min_value: 16
+    min_value: 18
     max_value: 32
     step: 1
     mode: box
@@ -70,7 +70,6 @@ select:
     options:
       - "off"
       - "cool"
-      - "heat"
       - "fan_only"
       - "dry"
       - "auto"
@@ -89,3 +88,22 @@ select:
     optimistic: true
     set_action:
       - lambda: 'id(clim)->set_sync_fan(x);'
+
+switch:
+  - platform: template
+    name: "Clim resync swing"
+    id: sync_swing
+    optimistic: true
+    turn_on_action:
+      - lambda: 'id(clim)->set_sync_swing(true);'
+    turn_off_action:
+      - lambda: 'id(clim)->set_sync_swing(false);'
+
+  - platform: template
+    name: "Clim resync silence"
+    id: sync_comfort
+    optimistic: true
+    turn_on_action:
+      - lambda: 'id(clim)->set_sync_comfort(true);'
+    turn_off_action:
+      - lambda: 'id(clim)->set_sync_comfort(false);'
