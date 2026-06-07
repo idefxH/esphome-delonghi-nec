@@ -215,6 +215,8 @@ void DelonghiNEC::send_nec_(uint16_t address, uint16_t command) {
   data.command_repeats = 1;
   auto call = this->transmitter_->transmit();
   remote_base::NECProtocol().encode(call.get_data(), data);
+  call.set_send_times(1);
+  call.set_send_wait(0);
   call.perform();
 }
 
