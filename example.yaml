@@ -1,0 +1,91 @@
+esphome:
+  name: delonghi-clim
+
+esp32:
+  board: pico32
+  framework:
+    type: arduino
+
+logger:
+api:
+ota:
+  - platform: esphome
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+# Pull the component straight from GitHub.
+external_components:
+  - source: github://idefxH/esphome-delonghi-nec
+    components: [delonghi_nec]
+
+# IR LED driver.
+remote_transmitter:
+  id: trsmt
+  pin: GPIO26
+  carrier_duty_percent: 50%
+
+# IR receiver used to mirror physical remote presses back into Home Assistant.
+remote_receiver:
+  id: rcvr
+  pin:
+    number: GPIO32
+    inverted: true
+    mode:
+      input: true
+      pullup: true
+  tolerance: 55%
+
+climate:
+  - platform: delonghi_nec
+    id: clim
+    name: "Climatisation"
+    transmitter_id: trsmt
+    receiver_id: rcvr
+    # Optional: feed a real room temperature sensor into the climate card.
+    # sensor: room_temperature
+
+# --- Manual resync entities -------------------------------------------------
+# These overwrite the controller's idea of the unit without sending any IR.
+# Use them when the tracked state drifts from reality (power loss, missed
+# frame, remote used while the ESP was off, ...).
+
+number:
+  - platform: template
+    name: "Clim resync temperature"
+    id: sync_temperature
+    min_value: 16
+    max_value: 32
+    step: 1
+    mode: box
+    optimistic: true
+    set_action:
+      - lambda: 'id(clim)->set_sync_temperature(x);'
+
+select:
+  - platform: template
+    name: "Clim resync mode"
+    id: sync_mode
+    options:
+      - "off"
+      - "cool"
+      - "heat"
+      - "fan_only"
+      - "dry"
+      - "auto"
+    optimistic: true
+    set_action:
+      - lambda: 'id(clim)->set_sync_mode(x);'
+
+  - platform: template
+    name: "Clim resync fan"
+    id: sync_fan
+    options:
+      - "low"
+      - "medium"
+      - "high"
+      - "auto"
+    optimistic: true
+    set_action:
+      - lambda: 'id(clim)->set_sync_fan(x);'

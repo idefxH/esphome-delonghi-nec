@@ -1,0 +1,10 @@
+# ESPHome build artifacts
+.esphome/
+*.bin
+
+# Python
+__pycache__/
+*.pyc
+
+# Secrets
+secrets.yaml
