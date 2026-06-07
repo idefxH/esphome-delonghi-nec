@@ -10,7 +10,7 @@ namespace esphome {
 namespace delonghi_nec {
 
 // Temperature range exposed to Home Assistant (cool setpoint).
-static constexpr float TEMP_MIN = 16.0f;
+static constexpr float TEMP_MIN = 18.0f;
 static constexpr float TEMP_MAX = 32.0f;
 
 // Delay between two consecutive IR frames. The unit needs a moment to digest
