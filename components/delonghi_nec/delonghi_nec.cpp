@@ -30,6 +30,57 @@ FanSpeed fan_mode_to_speed(climate::ClimateFanMode mode, bool allow_auto) {
 
 }  // namespace
 
+void DelonghiNEC::setup() {
+  climate_ir::ClimateIR::setup();
+  this->restore_tracked_state_();
+}
+
+void DelonghiNEC::restore_tracked_state_() {
+  // After a reboot the base class restores the HA-facing state from flash
+  // (mode, target_temperature, fan_mode, swing_mode, preset) but our tracked
+  // physical-state variables reset to C++ defaults.  Realign them so the first
+  // transmit_state() diff is calculated against what the AC is actually doing.
+
+  if (this->mode == climate::CLIMATE_MODE_OFF) {
+    this->power_on_ = false;
+    this->auto_on_ = false;
+  } else {
+    this->power_on_ = true;
+    this->auto_on_ = (this->mode == climate::CLIMATE_MODE_HEAT_COOL);
+    if (!this->auto_on_) {
+      if (this->mode == climate::CLIMATE_MODE_DRY)
+        this->base_mode_ = BASE_DRY;
+      else if (this->mode == climate::CLIMATE_MODE_FAN_ONLY)
+        this->base_mode_ = BASE_FAN_ONLY;
+      else
+        this->base_mode_ = BASE_COOL;
+    }
+  }
+
+  this->temp_ = static_cast<int8_t>(lroundf(this->target_temperature));
+  if (this->temp_ < static_cast<int8_t>(TEMP_MIN))
+    this->temp_ = static_cast<int8_t>(TEMP_MIN);
+  if (this->temp_ > static_cast<int8_t>(TEMP_MAX))
+    this->temp_ = static_cast<int8_t>(TEMP_MAX);
+
+  if (this->fan_mode.has_value()) {
+    bool is_fan_only = (!this->auto_on_ && this->base_mode_ == BASE_FAN_ONLY);
+    if (is_fan_only) {
+      this->fan_fan_only_ = fan_mode_to_speed(this->fan_mode.value(), false);
+    } else {
+      this->fan_main_ = fan_mode_to_speed(this->fan_mode.value(), true);
+    }
+  }
+
+  this->swing_ = (this->swing_mode == climate::CLIMATE_SWING_VERTICAL);
+  this->comfort_ = (this->preset.has_value() && this->preset.value() == climate::CLIMATE_PRESET_COMFORT);
+
+  ESP_LOGI(TAG, "restored tracked state: power=%s mode=%d temp=%d fan_main=%d fan_fo=%d swing=%s comfort=%s",
+           this->power_on_ ? "on" : "off", this->base_mode_, this->temp_,
+           this->fan_main_, this->fan_fan_only_,
+           this->swing_ ? "on" : "off", this->comfort_ ? "on" : "off");
+}
+
 climate::ClimateMode DelonghiNEC::tracked_mode_() const {
   if (!this->power_on_)
     return climate::CLIMATE_MODE_OFF;

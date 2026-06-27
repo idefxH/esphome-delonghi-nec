@@ -72,6 +72,8 @@ class DelonghiNEC : public climate_ir::ClimateIR {
   void set_sync_swing(bool swing);
   void set_sync_comfort(bool comfort);
 
+  void setup() override;
+
  protected:
   // Diff the requested Home Assistant state against the tracked state and queue
   // the toggle commands required to close the gap.
@@ -88,6 +90,10 @@ class DelonghiNEC : public climate_ir::ClimateIR {
   void enqueue_and_send_(const std::vector<uint16_t> &commands);
   void send_next_();
   void send_nec_(uint16_t address, uint16_t command);
+
+  // Align tracked physical state from the HA-restored state after boot so that
+  // the first transmit_state() diff is correct even after an ESP reboot.
+  void restore_tracked_state_();
 
   // Translation between the tracked state and the climate component fields.
   climate::ClimateMode tracked_mode_() const;
